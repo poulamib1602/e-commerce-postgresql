@@ -3,9 +3,9 @@ const response = require('../utilities/response');
 const productRepo = require("../repo/product");
 
 const create = async (req, res) => {
-  const { name, description, price, category, image, cart } = req.body;
+  const { name, description, brand, price, category, image, cart } = req.body;
   try {
-    const newProduct = await productRepo.create({ name, description, price, category, image, cart })
+    const newProduct = await productRepo.create({ name, description, brand, price, category, image, cart })
     response.success(res, newProduct);
   } catch (error) {
     response.error(res, error, 500);
@@ -55,9 +55,61 @@ const allprod = async (req, res) => {
   }
 };
 
+const filterProduct = async (req, res) => {
+  try {
+    const { category, priceRange, brand } = req.query;
+    if (category) {
+      query = await knex('product').select('*').where('category', category);
+    }
+    if (priceRange) {
+      const [minPrice, maxPrice] = priceRange.split('-');
+      query = await knex('product').select('*').whereBetween('price', [minPrice, maxPrice]);
+    }
+    if (brand) {
+      query = await knex('product').select('*').where({ brand });
+    }
+    response.success(res, query);
+  } catch (error) {
+    response.error(res, error, 500);
+  }
+};
+
+const searchProduct = async (req, res) => {
+  try {
+    const { name, category } = req.query;
+    const searchResults = await knex('product').select('*').where('name', name).orWhere('category', category);
+    response.success(res, searchResults);
+  } catch (error) {
+    response.error(res, error, 500);
+  }
+};
+
+const getAllCategories = async (req, res) => {
+  try {
+    const categories = await knex('product').distinct('category');
+    response.success(res, categories);
+  } catch (error) {
+    response.error(res, error, 500);
+  }
+};
+
+const getProductsByCategory = async (req, res) => {
+  const { category } = req.params;
+  try {
+    const products = await knex('product').select('name').where({ category });
+    response.success(res, products);
+  } catch (error) {
+    response.error(res, error, 500);
+  }
+};
+
 module.exports = {
   create,
   allprod,
   deleteprod,
-  updateprod
+  updateprod,
+  filterProduct,
+  getAllCategories,
+  getProductsByCategory,
+  searchProduct
 }

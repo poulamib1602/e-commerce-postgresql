@@ -15,4 +15,12 @@ router.delete("/:id", verifyTokenAndAdmin, productController.deleteprod);
 
 router.get("/", productController.allprod);
 
+router.get('/filter', productController.filterProduct);
+
+router.get('/categories', productController.getAllCategories);
+
+router.get('/categories/:category', productController.getProductsByCategory);
+
+router.get('/search', productController.searchProduct);
+
 module.exports = router;

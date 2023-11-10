@@ -7,6 +7,7 @@ const userRouter = require("./route/user");
 const productRouter = require("./route/product");
 const cartRouter = require("./route/cart");
 const orderRouter = require("./route/order");
+const wishlistRouter = require("./route/wishlist");
 
 require("./middleware/database");
 require("./middleware/schema");
@@ -24,6 +25,7 @@ app.use("/user", userRouter);
 app.use("/product", productRouter);
 app.use("/cart", cartRouter);
 app.use("/order", orderRouter);
+app.use("/wishlist", wishlistRouter);
 
 app.listen(port, () => {
     logger.info(`Server is running on port ${port}`);
