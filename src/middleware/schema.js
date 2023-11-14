@@ -106,3 +106,24 @@ knex.schema
   .catch((error) => {
     console.error(error);
   });
+
+knex.schema
+  .hasTable("product_reviews")
+  .then((exists) => {
+    if (!exists) {
+      return knex.schema.createTable("product_reviews", (table) => {
+        table.increments("id").primary();
+        table.integer("userId").unsigned().references("users.id");
+        table.integer("productId").unsigned().references("product.id");
+        table.integer("rating ").notNullable().checkIn([1, 2, 3, 4, 5]);
+        table.text('review_text');
+        table.timestamps(true, true);
+      });
+    }
+  })
+  .then(() => {
+    console.log("Created product_reviews table");
+  })
+  .catch((error) => {
+    console.error(error);
+  });

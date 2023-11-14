@@ -1,6 +1,9 @@
 const knex = require("../middleware/database");
 const response = require('../utilities/response');
 const productRepo = require("../repo/product");
+const ratingRepo = require("../repo/rating");
+const { Container } = require("winston");
+const { Console } = require("winston/lib/winston/transports");
 
 const create = async (req, res) => {
   const { name, description, brand, price, category, image, cart } = req.body;
@@ -103,6 +106,41 @@ const getProductsByCategory = async (req, res) => {
   }
 };
 
+const insertProductReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating, reviewText } = req.body;
+    const userId = req.user.id;
+    console.log("user  .... ", id, rating, reviewText, userId)
+
+    const newReview = await ratingRepo.createProductReview(id, userId, rating, reviewText);
+    res.status(201).json(newReview);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const allProductReview = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const productReviews = await ratingRepo.getProductReviews(id);
+    res.status(200).json(productReviews);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const averageRating = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const averageRating = await ratingRepo.calculateAverageRating(id);
+    res.status(200).json({ averageRating });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 module.exports = {
   create,
   allprod,
@@ -111,5 +149,8 @@ module.exports = {
   filterProduct,
   getAllCategories,
   getProductsByCategory,
-  searchProduct
+  searchProduct,
+  insertProductReview,
+  allProductReview,
+  averageRating
 }

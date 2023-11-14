@@ -23,4 +23,10 @@ router.get('/categories/:category', productController.getProductsByCategory);
 
 router.get('/search', productController.searchProduct);
 
+router.post("/:id/review", verifyTokenAndAdmin, productController.insertProductReview);
+
+router.get("/:id/review", verifyTokenAndAdmin, productController.allProductReview);
+
+router.get('/:id/average-rating', verifyTokenAndAdmin, productController.averageRating);
+
 module.exports = router;
