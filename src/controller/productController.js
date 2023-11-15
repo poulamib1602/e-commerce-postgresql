@@ -111,10 +111,8 @@ const insertProductReview = async (req, res) => {
     const { id } = req.params;
     const { rating, reviewText } = req.body;
     const userId = req.user.id;
-    console.log("user  .... ", id, rating, reviewText, userId)
-
     const newReview = await ratingRepo.createProductReview(id, userId, rating, reviewText);
-    res.status(201).json(newReview);
+    response.success(res,newReview);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -122,10 +120,9 @@ const insertProductReview = async (req, res) => {
 
 const allProductReview = async (req, res) => {
   const { id } = req.params;
-
   try {
     const productReviews = await ratingRepo.getProductReviews(id);
-    res.status(200).json(productReviews);
+    response.success(res,productReviews);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -135,7 +132,7 @@ const averageRating = async (req, res) => {
   const { id } = req.params;
   try {
     const averageRating = await ratingRepo.calculateAverageRating(id);
-    res.status(200).json({ averageRating });
+    response.success(res,{ averageRating });
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });
   }

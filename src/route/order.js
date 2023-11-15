@@ -21,4 +21,6 @@ router.get("/", verifyTokenAndAdmin, orderController.allorder);
 
 // router.get("/invest", verifyTokenAndAdmin, orderController.userMonthlyInvest);
 
+router.post('/confirm-order/:orderId', orderController.emailNotification);
+
 module.exports = router;

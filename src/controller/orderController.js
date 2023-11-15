@@ -1,6 +1,10 @@
 const knex = require("../middleware/database");
 const response = require('../utilities/response');
 const orderRepo = require("../repo/order");
+const nodemailer = require('nodemailer');
+const transporter = require("../utilities/email");
+
+require("dotenv").config();
 
 const create = async (req, res) => {
   const { userId, productId, quantity, amount, address, status } = req.body;
@@ -69,12 +73,48 @@ const orderelement = async (req, res) => {
   }
 };
 
+
+const emailNotification = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await knex("order").where({ id: orderId }).first();
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    if (order.status === 'confirmed') {
+      return res.status(400).json({ message: 'Order is already confirmed' });
+    }
+    await knex("order").where({ id: orderId }).update({ status: 'confirmed' });
+    const orderWithUser = await knex.select('*').from('users').where('id', 'in', knex.select('userId').from('order').where('id', orderId)).first();
+    if (!orderWithUser || !orderWithUser.email) {
+      return res.status(400).json({ message: 'Order is not associated with a user or user has no email' });
+    }
+    const mailOptions = {
+      from: process.env.from_email,
+      to: orderWithUser.email,
+      subject: 'Order Confirmation',
+      text: `Your order with ID ${orderId} has been confirmed. Thank you for your purchase!`,
+    };
+    await transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Failed to send email' });
+      }
+      res.status(200).json({ message: 'Order confirmed successfully', info });
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
 module.exports = {
   create,
   allorder,
   deleteorder,
   updateorder,
-  orderelement
+  orderelement,
+  emailNotification
 }
 
 
