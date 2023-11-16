@@ -2,7 +2,7 @@ const knex = require("../middleware/database");
 const response = require('../utilities/response');
 const orderRepo = require("../repo/order");
 const nodemailer = require('nodemailer');
-const transporter = require("../utilities/email");
+const sendEmail = require("../utilities/email");
 
 require("dotenv").config();
 
@@ -89,19 +89,18 @@ const emailNotification = async (req, res) => {
     if (!orderWithUser || !orderWithUser.email) {
       return res.status(400).json({ message: 'Order is not associated with a user or user has no email' });
     }
-    const mailOptions = {
-      from: process.env.from_email,
-      to: orderWithUser.email,
-      subject: 'Order Confirmation',
-      text: `Your order with ID ${orderId} has been confirmed. Thank you for your purchase!`,
-    };
-    await transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Failed to send email' });
-      }
-      res.status(200).json({ message: 'Order confirmed successfully', info });
-    });
+    try {
+      await sendEmail({
+        email: orderWithUser.email,
+        subject: 'Order Confirmation',
+        text: `Your order with ID ${orderId} has been confirmed. Thank you for your purchase!`,
+        emailMessage: "Order Confirmed sucessfully"
+      });
+      res.status(200).json({ message: 'Order confirmed successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'mail error' });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });

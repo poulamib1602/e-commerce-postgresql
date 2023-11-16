@@ -10,6 +10,8 @@ knex.schema
         table.string("password").notNullable();
         table.string("email").unique().notNullable();
         table.string("isAdmin").defaultTo(false);
+        table.string('reset_token', 255).defaultTo(null);
+        table.timestamp('reset_token_expires_at').defaultTo(null);
         table.timestamps(true, true);
       });
     }
