@@ -44,7 +44,7 @@ const forgetPassword = async (req, res) => {
   }
 };
 
-const changePassword = async (req, res) => {
+const reSetPassword = async (req, res) => {
   const { token } = req.query;
   const { email, newPassword } = req.body;
   console.log(".....", token, email, newPassword)
@@ -79,4 +79,50 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { forgetPassword, changePassword }; 
+const changePassword = async (req, res) => {
+  const { email, oldPassword, newPassword } = req.body;
+
+  try {
+    const user = await knex('users').where('email', email).first();
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid old password' });
+    }
+    const resetToken = generateResetToken(newPassword);
+    const resetTokenExpiresAt = new Date();
+    resetTokenExpiresAt.setHours(resetTokenExpiresAt.getHours() + 1);
+
+    try {
+      await knex('users')
+        .where('email', email)
+        .update({
+          reset_token: resetToken,
+          reset_token_expires_at: resetTokenExpiresAt,
+        });
+
+      await sendEmail({
+        email: email,
+        subject: 'Password Change Request',
+        text: `Click the following link to reset your password: http://localhost:4000/user/reset-password?token=${resetToken}`
+      });
+
+      res.status(200).json({ message: 'Token sent for password reset', "resetToken": resetToken });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  } catch (error) {
+    console.error('Error during change password:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = {
+  forgetPassword,
+  reSetPassword,
+  changePassword
+}; 
