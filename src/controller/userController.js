@@ -35,21 +35,29 @@ const update = async (req, res) => {
 const deleteUser = async (req, res) => {
   const { userId, isAdmin } = req.body;
   const { id } = req.params;
+
   try {
-    const user = await knex('users').where({ id }).first();
-    if (!user) {
-      return res.status(404).json("User not found");
-    }
-    if (userId === id || isAdmin) {
-      await knex('users').where({ id }).del();
-      return res.status(200).json("Account has been deleted");
-    } else {
-      return res.status(403).json("You can delete only your account!");
-    }
+    await knex.transaction(async (trx) => {
+      const user = await knex('users').transacting(trx).where({ id }).first();
+      if (!user) {
+        return res.status(404).json("User not found");
+      }
+      if (userId === id || isAdmin) {
+
+        await knex('order').transacting(trx).where({ userId }).del();
+        await knex('cart').transacting(trx).where({ userId }).del();
+        await knex('wishlist').transacting(trx).where({ userId }).del();
+        await knex('product_reviews').transacting(trx).where({ userId }).del();
+
+        await knex('users').transacting(trx).where({ id }).del();
+        await trx.commit();
+        return res.status(200).json("Account has been deleted");
+      } else {
+        return res.status(403).json("You can delete only your account!");
+      }
+    });
   } catch (error) {
     response.error(res, error, 500);
-  } finally {
-    knex.destroy();
   }
 };
 

@@ -4,8 +4,6 @@ const orderRepo = require("../repo/order");
 const nodemailer = require('nodemailer');
 const sendEmail = require("../utilities/email");
 
-require("dotenv").config();
-
 const create = async (req, res) => {
   const { userId, productId, quantity, amount, address, status } = req.body;
   try {
@@ -98,11 +96,9 @@ const emailNotification = async (req, res) => {
       });
       res.status(200).json({ message: 'Order confirmed successfully' });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ message: 'mail error' });
     }
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };

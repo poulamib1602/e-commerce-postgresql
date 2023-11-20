@@ -1,4 +1,5 @@
 const knex = require("../middleware/database");
+const response = require('../utilities/response');
 
 const getUserWishlist = async (req, res) => {
     const userId = req.params.userId;

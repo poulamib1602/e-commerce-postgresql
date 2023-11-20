@@ -37,7 +37,7 @@ const deleteprod = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized to delete others' product" });
     } else {
       response.success(res, {
-        message: "Post product successfully",
+        message: "Deleted product successfully",
       });
     }
   } catch (error) {
@@ -60,20 +60,30 @@ const allprod = async (req, res) => {
 
 const filterProduct = async (req, res) => {
   try {
+    let query = knex('product').select('*');
     const { category, priceRange, brand } = req.query;
     if (category) {
-      query = await knex('product').select('*').where('category', category);
+      query = applyFilter(query, 'category', category);
     }
     if (priceRange) {
       const [minPrice, maxPrice] = priceRange.split('-');
-      query = await knex('product').select('*').whereBetween('price', [minPrice, maxPrice]);
+      query = applyFilter(query, 'price', 'range', [minPrice, maxPrice]);
     }
     if (brand) {
-      query = await knex('product').select('*').where({ brand });
+      query = applyFilter(query, 'brand', brand);
     }
-    response.success(res, query);
+    const result = await query;
+    response.success(res, result);
   } catch (error) {
     response.error(res, error, 500);
+  }
+};
+
+function applyFilter(query, field, value, range = null) {
+  if (range) {
+    return query.whereBetween(field, range);
+  } else {
+    return query.where(field, value);
   }
 };
 
